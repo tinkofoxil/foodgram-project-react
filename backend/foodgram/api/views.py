@@ -47,18 +47,18 @@ class CustomUserViewSet(UserViewSet):
         author = get_object_or_404(User, id=id)
         object_exist = user.follower.filter(author=author).exists()
         if request.method == 'POST':
-            if object_exist or user.id == int(id):
-                return Response({
-                    'error': 'Возможно вы пытаетесь подписаться на самого себя'
-                },
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-            subscription = Follow.objects.create(user=user, author=author)
-            serializer = FollowSerializer(subscription)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        if not object_exist:
+            if object_exist:
+                if user.id == author.id:
+                    return Response({
+                        'error': 'Возможно вы пытаетесь подписаться на самого себя'
+                    },
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+                subscription = Follow.objects.create(user=user, author=author)
+                serializer = FollowSerializer(subscription)
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
             return Response({
-                'error': 'Объект не найден'},
+                    'error': 'Объект не найден'},
                 status=status.HTTP_404_NOT_FOUND
             )
         user.follower.filter(author=author).delete()

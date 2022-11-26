@@ -33,7 +33,7 @@ class Tag(models.Model):
     )
     color = models.CharField(
         verbose_name='Цвет тега в HEX',
-        max_length=7,
+        max_length=10,
         unique=True
     )
     slug = models.SlugField(
@@ -172,12 +172,14 @@ class ShoppingCart(models.Model):
     user = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
-        related_name='author_of_shopping_cart'
+        related_name='author_of_shopping_cart',
+        verbose_name='Пользователь'
     )
     recipe = models.ForeignKey(
         Recipe,
         on_delete=models.CASCADE,
-        related_name='shopping_cart'
+        related_name='shopping_cart',
+        verbose_name='Рецепт'
     )
 
     class Meta:

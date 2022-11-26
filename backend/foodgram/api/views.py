@@ -137,7 +137,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
         return self.add_fav_shopping_cart(request, model, pk)
 
     @action(permission_classes=(permissions.IsAuthenticated,), detail=False)
-    def download_shopping_cart(self, request, pk=None):
+    def download_shopping_list(self, request, pk=None):
         user = self.request.user
         shopping_cart = user.author_of_shopping_cart.all()
         shopping_cart_dict = {}
@@ -147,17 +147,17 @@ class RecipeViewSet(viewsets.ModelViewSet):
             )
             for values in values_list:
                 name = values['name']
-                measurement_unit = values['measurement_unit']
                 amount = values['amount']
-                if name not in shopping_cart_dict:
+                measurement_unit = values['measurement_unit']
+                if name in shopping_cart_dict:
+                    shopping_cart_dict[name]['amount'] = (
+                        shopping_cart_dict[name]['amount'] + amount
+                    )
+                else:
                     shopping_cart_dict[name] = {
                         'measurement_unit': measurement_unit,
                         'amount': amount,
                     }
-                else:
-                    shopping_cart_dict[name]['amount'] = (
-                        shopping_cart_dict[name]['amount'] + amount
-                    )
         shopping_list = []
         for key, values in shopping_cart_dict.items():
             shopping_list.append(

@@ -104,16 +104,10 @@ class RecipeViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
 
-    def add_fav_shopping_cart(
-        self, request, model, pk
-    ):
+    def add_fav_shopping_cart(self, request, model, pk):
         user = self.request.user
         recipe = get_object_or_404(Recipe, id=pk)
-        object_exist = model.objects.filter(
-            user=user,
-            recipe__id=pk
-        ).exists()
-
+        object_exist = model.objects.filter(user=user, recipe__id=pk).exists()
         if request.method == 'POST':
             if object_exist:
                 return Response(status=status.HTTP_400_BAD_REQUEST)
@@ -132,9 +126,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
     )
     def favorite(self, request, pk):
         model = FavoriteRecipe
-        return self.add_fav_shopping_cart(
-            request, model, pk
-        )
+        return self.add_fav_shopping_cart(request, model, pk)
 
     @action(
         methods=['post', 'delete'], detail=True,
@@ -142,9 +134,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
     )
     def shopping_cart(self, request, pk):
         model = ShoppingCart
-        return self.add_fav_shopping_cart(
-            request, model, pk
-        )
+        return self.add_fav_shopping_cart(request, model, pk)
 
     @action(permission_classes=(permissions.IsAuthenticated,), detail=False)
     def download_shopping_cart(self, request, pk=None):

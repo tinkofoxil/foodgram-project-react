@@ -8,8 +8,8 @@ from rest_framework.response import Response
 from rest_framework.decorators import action
 
 from users.models import Follow, User
-from .filters import RecipeFilter, IngredientSearchFilter
 from .pagination import CustomPageNumberPagination
+from .filters import RecipeFilter, IngredientSearchFilter
 from recipes.models import (FavoriteRecipe, Ingredient, Recipe, ShoppingCart, Tag)
 from .serializers import (FollowSerializer, IngredientSerializer,
                           TagSerializer, RecipeSerializer)
@@ -104,7 +104,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
 
-    def add_fav_shopping_cart(self, request, model, pk):
+    def add_favotite_shopping_cart(self, request, model, pk):
         user = self.request.user
         recipe = get_object_or_404(Recipe, id=pk)
         object_exist = model.objects.filter(user=user, recipe__id=pk).exists()
@@ -124,17 +124,17 @@ class RecipeViewSet(viewsets.ModelViewSet):
         methods=['post', 'delete'], detail=True,
         permission_classes=(permissions.IsAuthenticated,)
     )
-    def favorite(self, request, pk):
-        model = FavoriteRecipe
-        return self.add_fav_shopping_cart(request, model, pk)
+    def shopping_cart(self, request, pk):
+        model = ShoppingCart
+        return self.add_favotite_shopping_cart(request, model, pk)
 
     @action(
         methods=['post', 'delete'], detail=True,
         permission_classes=(permissions.IsAuthenticated,)
     )
-    def shopping_cart(self, request, pk):
-        model = ShoppingCart
-        return self.add_fav_shopping_cart(request, model, pk)
+    def favorite(self, request, pk):
+        model = FavoriteRecipe
+        return self.add_favotite_shopping_cart(request, model, pk)
 
     @action(permission_classes=(permissions.IsAuthenticated,), detail=False)
     def download_shopping_list(self, request, pk=None):

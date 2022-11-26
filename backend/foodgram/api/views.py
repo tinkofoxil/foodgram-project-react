@@ -4,8 +4,8 @@ from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from djoser.views import UserViewSet
 from rest_framework import permissions, status, viewsets
-from rest_framework.decorators import action
 from rest_framework.response import Response
+from rest_framework.decorators import action
 
 from users.models import Follow, User
 from .filters import RecipeFilter, IngredientSearchFilter
@@ -30,14 +30,13 @@ class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
 class CustomUserViewSet(UserViewSet):
     pagination_class = CustomPageNumberPagination
 
+    def get_queryset(self):
+        return User.objects.all()
+
     def get_permissions(self):
         if self.action == 'retrieve':
             self.permission_classes = (permissions.IsAuthenticated,)
         return super().get_permissions()
-
-    def get_queryset(self):
-        queryset = User.objects.all()
-        return queryset
 
     @action(
         methods=['post', 'delete'], detail=True,
@@ -46,19 +45,18 @@ class CustomUserViewSet(UserViewSet):
     def subscribe(self, request, id):
         user = self.request.user
         author = get_object_or_404(User, id=id)
-        object_existence = user.follower.filter(author=author).exists()
+        object_exist = user.follower.filter(author=author).exists()
         if request.method == 'POST':
-            if object_existence or user.id == int(id):
+            if object_exist or user.id == int(id):
                 return Response({
-                    'error': 'Вы уже подписаны или пытаетесь подписаться '
-                             'на самого себя'
+                    'error': 'Возможно вы пытаетесь подписаться на самого себя'
                 },
                     status=status.HTTP_400_BAD_REQUEST
                 )
             subscription = Follow.objects.create(user=user, author=author)
             serializer = FollowSerializer(subscription)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
-        if not object_existence:
+        if not object_exist:
             return Response({
                 'error': 'Объект не найден'},
                 status=status.HTTP_404_NOT_FOUND
@@ -107,31 +105,24 @@ class RecipeViewSet(viewsets.ModelViewSet):
         serializer.save(author=self.request.user)
 
     def add_fav_shopping_cart(
-        self, request, model, post_error, delete_error, pk
+        self, request, model, pk
     ):
         user = self.request.user
         recipe = get_object_or_404(Recipe, id=pk)
-        object_existence = model.objects.filter(
+        object_exist = model.objects.filter(
             user=user,
             recipe__id=pk
         ).exists()
 
         if request.method == 'POST':
-            if object_existence:
-                return Response({
-                    'error': post_error
-                },
-                    status=status.HTTP_400_BAD_REQUEST
-                )
+            if object_exist:
+                return Response(status=status.HTTP_400_BAD_REQUEST)
             model.objects.create(user=user, recipe=recipe)
             serializer = RecipeSerializer(recipe)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-        if not object_existence:
-            return Response({
-                'error': delete_error},
-                status=status.HTTP_404_NOT_FOUND
-            )
+        if not object_exist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
         model.objects.filter(user=user, recipe=recipe).delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
@@ -141,10 +132,8 @@ class RecipeViewSet(viewsets.ModelViewSet):
     )
     def favorite(self, request, pk):
         model = FavoriteRecipe
-        post_error = 'Рецепт уже есть в избранном'
-        delete_error = 'Рецепта нет в избранном'
         return self.add_fav_shopping_cart(
-            request, model, post_error, delete_error, pk
+            request, model, pk
         )
 
     @action(
@@ -153,10 +142,8 @@ class RecipeViewSet(viewsets.ModelViewSet):
     )
     def shopping_cart(self, request, pk):
         model = ShoppingCart
-        post_error = 'Рецепт уже есть в списке покупок'
-        delete_error = 'Рецепта нет в списке покупок'
         return self.add_fav_shopping_cart(
-            request, model, post_error, delete_error, pk
+            request, model, pk
         )
 
     @action(permission_classes=(permissions.IsAuthenticated,), detail=False)
@@ -186,7 +173,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
             shopping_list.append(
                 f'{key} - {values["amount"]} {values["measurement_unit"]}. \n'
             )
-        filename = 'shopping-list.txt'
+        filename = 'shopping_list.txt'
         response = HttpResponse(shopping_list, content_type='text/plain')
         response['Content-Disposition'] = f'attachment; filename={filename}'
         return response

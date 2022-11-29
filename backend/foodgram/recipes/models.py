@@ -55,11 +55,11 @@ class Recipe(models.Model):
     tags = models.ManyToManyField(
         Tag,
         verbose_name='Теги',
-        through='RecipeTag'
+        related_name='recipes',
     )
     author = models.ForeignKey(
         User,
-        on_delete=models.SET_DEFAULT,
+        on_delete=models.CASCADE,
         null=True,
         default='Неизвестный автор',
         related_name='recipes'
@@ -99,19 +99,6 @@ class Recipe(models.Model):
         return self.name
 
 
-class RecipeTag(models.Model):
-    """Модель тега рецепта"""
-    tag = models.ForeignKey(Tag, on_delete=models.CASCADE)
-    recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE)
-
-    class Meta:
-        verbose_name = 'Тег рецепта'
-        verbose_name_plural = 'Теги рецепта'
-
-    def __str__(self):
-        return f'{self.tag} {self.recipe}'
-
-
 class IngredientsAmount(models.Model):
     """Модель количества ингридиентов."""
 
@@ -135,9 +122,11 @@ class IngredientsAmount(models.Model):
     class Meta:
         verbose_name = 'Количество ингредиентов'
         verbose_name_plural = 'Количество ингредиентов'
-
-    def __str__(self):
-        return self.name
+        ordering = ['-id']
+        constraints = [
+            models.UniqueConstraint(
+                fields=['recipe', 'ingredient'],
+                name='unique ingredient')]
 
 
 class FavoriteRecipe(models.Model):

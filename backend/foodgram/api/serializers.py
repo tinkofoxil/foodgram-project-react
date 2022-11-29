@@ -70,7 +70,6 @@ class CustomUserCreateSerializer(UserCreateSerializer):
 class RecipeSerializer(serializers.ModelSerializer):
     tags = TagSerializer(many=True, read_only=True)
     author = UserSerializer(read_only=True)
-    # ingredients = IngredientsAmountSerializer(many=True, read_only=True)
     ingredients = serializers.SerializerMethodField()
     is_favorited = serializers.BooleanField(read_only=True)
     is_in_shopping_cart = serializers.BooleanField(read_only=True)
@@ -129,11 +128,18 @@ class RecipeSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(
                 'Поле tags не может быть пустым'
             )
+        tag_list = []
         for tag in tags:
+            id = tag.get('id')
             if not Tag.objects.filter(id=tag).exists():
                 raise serializers.ValidationError(
                     f'Тега {tag} не существует'
                 )
+            if id in tag_list:
+                raise serializers.ValidationError(
+                    'Теги дублируются'
+                )
+            tag_list.append(id)
         return tags
 
     def validate_cooking_time(self, cooking_time):
@@ -144,7 +150,6 @@ class RecipeSerializer(serializers.ModelSerializer):
         return cooking_time
 
     def create(self, validated_data):
-        print(validated_data)
         recipe = Recipe.objects.create(**validated_data)
         recipe.tags.set(self.initial_data.get('tags'))
         ingredients = self.initial_data.get('ingredients')

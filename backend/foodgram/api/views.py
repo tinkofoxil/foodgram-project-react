@@ -1,5 +1,5 @@
 from django.db.models.aggregates import Sum
-from django.db.models import BooleanField, Exists, F, OuterRef, Value
+from django.db.models import BooleanField, Exists, OuterRef, Value
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
@@ -11,9 +11,11 @@ from rest_framework.decorators import action
 from users.models import Follow, User
 from .pagination import CustomPageNumberPagination
 from .filters import RecipeFilter, IngredientSearchFilter
-from recipes.models import (FavoriteRecipe, Ingredient, Recipe, ShoppingCart, Tag, IngredientsAmount)
-from .serializers import (FollowSerializer, IngredientSerializer, CartSerializer,
-                          TagSerializer, RecipeSerializer, FavoriteSerializer)
+from recipes.models import (FavoriteRecipe, Ingredient, Recipe, ShoppingCart,
+                            Tag, IngredientsAmount)
+from .serializers import (FollowSerializer, IngredientSerializer,
+                          CartSerializer, TagSerializer, RecipeSerializer,
+                          FavoriteSerializer)
 
 
 class TagViewSet(viewsets.ReadOnlyModelViewSet):
@@ -89,7 +91,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(serializer.data, status=status.HTTP_201_CREATED)
-    
+
     @staticmethod
     def delete_method_for_actions(request, pk, model):
         user = request.user
@@ -103,10 +105,14 @@ class RecipeViewSet(viewsets.ModelViewSet):
         if user.is_authenticated:
             queryset = Recipe.objects.annotate(
                 is_favorited=Exists(
-                    user.author_of_favoritting.filter(recipe__pk=OuterRef('pk'))
+                    user.author_of_favoritting.filter(
+                        recipe__pk=OuterRef('pk')
+                    )
                 ),
                 is_in_shopping_cart=Exists(
-                    user.author_of_shopping_cart.filter(recipe__pk=OuterRef('pk'))
+                    user.author_of_shopping_cart.filter(
+                        recipe__pk=OuterRef('pk')
+                    )
                 ),
             )
         else:
@@ -127,7 +133,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
         return self.post_method_for_actions(
             request, pk, serializers=CartSerializer
         )
-    
+
     @shopping_cart.mapping.delete
     def delete_shopping_cart(self, request, pk):
         return self.delete_method_for_actions(

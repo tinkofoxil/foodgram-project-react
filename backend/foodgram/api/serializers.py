@@ -89,7 +89,6 @@ class RecipeSerializer(serializers.ModelSerializer):
         )
 
     def create_ingredients(self, recipe, ingredients):
-        print(ingredients)
         IngredientsAmount.objects.bulk_create([
             IngredientsAmount(
                 recipe=recipe,

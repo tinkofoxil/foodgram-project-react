@@ -37,10 +37,10 @@ services:
       - ./nginx.conf:/etc/nginx/conf.d/default.conf
       - ../frontend/build:/var/html/
       - ./docs/:/var/html/api/docs/
-      -  static_backend_value:/var/html/static_backend/
+      - static_backend_value:/var/html/static_backend/
       - media_value:/var/html/media/
     depends_on:
-      - web
+      - frontend
 
 volumes:
   static_backend_value:

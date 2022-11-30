@@ -11,10 +11,10 @@ class UserAdmin(UserAdmin):
     """Модель администрирование пользователей."""
 
     list_display = (
-            'email',
-            'username',
-            'first_name',
-            'last_name',
+        'email',
+        'username',
+        'first_name',
+        'last_name',
     )
     list_filter = ('email', 'username',)
 

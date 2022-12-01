@@ -13,7 +13,6 @@ class Command(BaseCommand):
     help = 'Write data from json file to database.'
 
     def handle(self, *args, **options):
-        json_name = 'ingredients.json'
         location_json = os.path.join(BASE_DIR, 'data\ingredients.json')
         with open(location_json, encoding='utf-8') as json_file:
             data = json.load(json_file)

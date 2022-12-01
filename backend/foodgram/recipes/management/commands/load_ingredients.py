@@ -1,27 +1,26 @@
-import csv
+import os
+import json
 
 from django.core.management.base import BaseCommand
+
 from recipes.models import Ingredient
+from foodgram.settings import BASE_DIR
 
 
 class Command(BaseCommand):
-    """
-    Команда 'load_ingredients' загружает ингредиенты
-    в базу из csv файла, который располагается в
-    директории /data/
-    """
+    """Запись данных из json-файла в БД."""
+
+    help = 'Write data from json file to database.'
 
     def handle(self, *args, **options):
-        self.import_ingredients()
-        print('Загрузка ингредиентов завершена.')
-
-    def import_ingredients(self, file='ingredients.csv'):
-        print(f'Загрузка {file}...')
-        file_path = f'./data/{file}'
-        with open(file_path, newline='', encoding='utf-8') as f:
-            reader = csv.reader(f)
-            for row in reader:
-                status, created = Ingredient.objects.update_or_create(
-                    name=row[0],
-                    measurement_unit=row[1]
+        json_name = 'ingredients.json'
+        location_json = os.path.join(BASE_DIR, 'data\ingredients.json')
+        with open(location_json, encoding='utf-8') as json_file:
+            data = json.load(json_file)
+            for i in data:
+                name = i['name']
+                measurement_unit = i['measurement_unit']
+                Ingredient.objects.get_or_create(
+                    name=name,
+                    measurement_unit=measurement_unit
                 )

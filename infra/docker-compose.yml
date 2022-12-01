@@ -2,13 +2,6 @@ version: '3.3'
 
 services:
 
-  frontend:
-    image: tinkofoxil/foodgram_frontend:latest
-    volumes:
-      - ../frontend/:/app/result_build/
-    depends_on:
-      - backend
-
   db:
     image: postgres:13.0-alpine
     restart: always
@@ -28,6 +21,13 @@ services:
       - db
     env_file:
       - ./.env
+
+  frontend:
+    image: tinkofoxil/foodgram_frontend:latest
+    volumes:
+      - ../frontend/:/app/result_build/
+    depends_on:
+      - backend
 
   nginx:
     image: nginx:1.21.3-alpine

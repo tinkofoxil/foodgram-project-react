@@ -117,7 +117,7 @@ class RecipeSerializer(serializers.ModelSerializer):
                 )
             if not Ingredient.objects.filter(id=id).exists():
                 raise serializers.ValidationError(
-                    f'Такого ингредиента нет в БД.'
+                    'Такого ингредиента нет в БД.'
                 )
             if id in ingredient_list:
                 raise serializers.ValidationError(
@@ -224,9 +224,6 @@ class FollowSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError({
                 'errors': 'Вы уже подписаны на этого пользователя.'
             })
-        subscription = Follow.objects.filter(
-            user=self.context['request'].user, author=data['author']
-        )
 
     def to_representation(self, value):
         return FollowListSerializer(

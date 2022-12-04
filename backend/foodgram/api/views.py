@@ -11,11 +11,11 @@ from rest_framework.decorators import action
 from users.models import Follow, User
 from .pagination import CustomPageNumberPagination
 from .filters import RecipeFilter, IngredientSearchFilter
-from recipes.models import (FavoriteRecipe, Ingredient, Recipe, ShoppingCart,
+from recipes.models import (Favorite, Ingredient, Recipe, ShoppingCart,
                             Tag, IngredientsAmount)
 from .serializers import (FollowSerializer, IngredientSerializer,
                           CartSerializer, TagSerializer, RecipeSerializer,
-                          FavoriteSerializer)
+                          FavoriteSerializer, FollowListSerializer)
 
 
 class TagViewSet(viewsets.ReadOnlyModelViewSet):
@@ -40,6 +40,23 @@ class CustomUserViewSet(UserViewSet):
         if self.action == 'retrieve':
             self.permission_classes = (permissions.IsAuthenticated,)
         return super().get_permissions()
+
+    @action(['get'], detail=False, permission_classes=[permissions.IsAuthenticated])
+    def me(self, request, *args, **kwargs):
+        self.get_object = self.get_instance
+        return self.retrieve(request, *args, **kwargs)
+
+    @action(methods=['get'], detail=False)
+    def subscriptions(self, request):
+        subscriptions_list = self.paginate_queryset(
+            User.objects.filter(following__user=request.user)
+        )
+        serializer = FollowListSerializer(
+            subscriptions_list, many=True, context={
+                'request': request
+            }
+        )
+        return self.get_paginated_response(serializer.data)    
 
     @action(
         methods=['post', 'delete'], detail=True,
@@ -147,7 +164,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
     @favorite.mapping.delete
     def delete_favorite(self, request, pk):
         return self.delete_method_for_actions(
-            request=request, pk=pk, model=FavoriteRecipe)
+            request=request, pk=pk, model=Favorite)
 
     @action(permission_classes=(permissions.IsAuthenticated,), detail=False)
     def download_shopping_cart(self, request, pk=None):
@@ -176,7 +193,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
             shopping_list.append(
                 f'{key} - {values["amount"]} {values["measurement_unit"]}. \n'
             )
-        filename = 'shopping_list.txt'
+        filename = 'shopping-list.txt'
         response = HttpResponse(shopping_list, content_type='text/plain')
         response['Content-Disposition'] = f'attachment; filename={filename}'
         return response

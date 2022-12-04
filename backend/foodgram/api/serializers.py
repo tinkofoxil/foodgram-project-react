@@ -5,7 +5,7 @@ from drf_extra_fields.fields import Base64ImageField
 from rest_framework import serializers
 
 from recipes.models import (Ingredient, IngredientsAmount, Recipe,
-                            Tag, ShoppingCart, FavoriteRecipe)
+                            Tag, ShoppingCart, Favorite)
 from users.models import Follow, User
 
 
@@ -107,6 +107,10 @@ class RecipeSerializer(serializers.ModelSerializer):
         for ingredient in ingredients:
             id = ingredient.get('id')
             amount = ingredient.get('amount')
+            if int(amount) is None:
+                raise serializers.ValidationError(
+                    'Укажите кол-во ингредиентов'
+                )
             if int(amount) < 1:
                 raise serializers.ValidationError(
                     'Минимальное количество ингредиентов 1'
@@ -151,7 +155,7 @@ class RecipeSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         recipe = Recipe.objects.create(**validated_data)
         recipe.tags.set(self.initial_data.get('tags'))
-        ingredients = self.initial_data.get('ingredients')
+        ingredients = self.validated_data.get('ingredients')
         return self.create_ingredients(recipe, ingredients)
 
     def update(self, instance, validated_data):
@@ -253,7 +257,7 @@ class CartSerializer(serializers.ModelSerializer):
 
 class FavoriteSerializer(serializers.ModelSerializer):
     class Meta:
-        model = FavoriteRecipe
+        model = Favorite
         fields = ('user', 'recipe')
 
     def validate(self, data):
@@ -261,7 +265,7 @@ class FavoriteSerializer(serializers.ModelSerializer):
         if not request or request.user.is_anonymous:
             return False
         recipe = data['recipe']
-        if FavoriteRecipe.objects.filter(
+        if Favorite.objects.filter(
             user=request.user, recipe=recipe
         ).exists():
             raise serializers.ValidationError({

@@ -129,7 +129,7 @@ class IngredientsAmount(models.Model):
                 name='unique ingredient')]
 
 
-class FavoriteRecipe(models.Model):
+class Favorite(models.Model):
     """Модель избранного рецепта."""
     user = models.ForeignKey(
         User,

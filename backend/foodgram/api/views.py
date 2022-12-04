@@ -41,7 +41,10 @@ class CustomUserViewSet(UserViewSet):
             self.permission_classes = (permissions.IsAuthenticated,)
         return super().get_permissions()
 
-    @action(['get'], detail=False, permission_classes=[permissions.IsAuthenticated])
+    @action(
+        ['get'], detail=False,
+        permission_classes=[permissions.IsAuthenticated]
+    )
     def me(self, request, *args, **kwargs):
         self.get_object = self.get_instance
         return self.retrieve(request, *args, **kwargs)
@@ -81,17 +84,6 @@ class CustomUserViewSet(UserViewSet):
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(serializer.data, status=status.HTTP_201_CREATED)
-
-    @action(permission_classes=(permissions.IsAuthenticated,), detail=False)
-    def subscriptions(self, request, pk=None):
-        user = self.request.user
-        queryset = user.follower.all()
-        page = self.paginate_queryset(queryset)
-        if page is not None:
-            serializer = FollowSerializer(page, many=True)
-            return self.get_paginated_response(serializer.data)
-        serializer = FollowSerializer(queryset, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class RecipeViewSet(viewsets.ModelViewSet):

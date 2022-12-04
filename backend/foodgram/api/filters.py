@@ -1,5 +1,7 @@
+from django.db.models import ExpressionWrapper, Q, BooleanField
 from django_filters import AllValuesMultipleFilter, BooleanFilter, FilterSet
 from django_filters.widgets import BooleanWidget
+from django_filters.rest_framework import Filter
 from rest_framework.filters import SearchFilter
 from recipes.models import Recipe
 
@@ -22,4 +24,14 @@ class RecipeFilter(FilterSet):
 
 
 class IngredientSearchFilter(SearchFilter):
-    search_param = 'name'
+    name = Filter(
+        method='filter_name'
+    )
+
+    def filter_name(self, queryset, name, value):
+        data = queryset.filter(name__contains=value)
+        startswith = ExpressionWrapper(
+            Q(name__startswith=value),
+            output_field=BooleanField()
+        )
+        return data.annotate(startswith=startswith).order_by('-startswith')

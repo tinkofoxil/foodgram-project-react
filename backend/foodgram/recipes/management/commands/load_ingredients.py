@@ -1,25 +1,30 @@
+import csv
 import os
-import json
 
+from django.conf import settings
 from django.core.management.base import BaseCommand
 
 from recipes.models import Ingredient
-from foodgram.settings import BASE_DIR
+
+
+def ingredient_create(row):
+    Ingredient.objects.get_or_create(
+        name=row[0],
+        measurement_unit=row[1],
+    )
+
+
+action = {
+    "ingredients.csv": ingredient_create,
+}
 
 
 class Command(BaseCommand):
-    """Запись данных из json-файла в БД."""
-
-    help = 'Write data from json file to database.'
-
     def handle(self, *args, **options):
-        location_json = os.path.join(BASE_DIR, 'data/ingredients.json')
-        with open(location_json, encoding='utf-8') as json_file:
-            data = json.load(json_file)
-            for i in data:
-                name = i['name']
-                measurement_unit = i['measurement_unit']
-                Ingredient.objects.get_or_create(
-                    name=name,
-                    measurement_unit=measurement_unit
-                )
+        path = os.path.join(settings.BASE_DIR, "data/")
+        for key in action.keys():
+            with open(path + key, 'r', encoding='utf-8') as f:
+                reader = csv.reader(f)
+                next(reader)
+                for row in reader:
+                    action[key](row)

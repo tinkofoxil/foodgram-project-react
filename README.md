@@ -1,8 +1,8 @@
 ![example workflow](https://github.com/tinkofoxil/foodgram-project-react/actions/workflows/foodgram_workflow.yml/badge.svg)
 
 ### Доступ к серверу:
-http://84.201.154.246/
-Админка: login: admin, password: 170570an
+http://51.250.97.244/
+Админка: login: admin@mail.ru, password: 170570an
 
 # Проект «Foodgram»
 

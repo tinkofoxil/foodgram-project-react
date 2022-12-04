@@ -101,7 +101,7 @@ class RecipeSerializer(serializers.ModelSerializer):
     def validate_ingredients(self, ingredients):
         if not ingredients:
             raise serializers.ValidationError(
-                'Поле ingredients не может быть пустым'
+                'Поле ingredients обязательно.'
             )
         ingredient_list = []
         for ingredient in ingredients:
@@ -109,19 +109,19 @@ class RecipeSerializer(serializers.ModelSerializer):
             amount = ingredient.get('amount')
             if int(amount) is None:
                 raise serializers.ValidationError(
-                    'Укажите кол-во ингредиентов'
+                    'Укажите количество ингредиентов.'
                 )
             if int(amount) < 1:
                 raise serializers.ValidationError(
-                    'Минимальное количество ингредиентов 1'
+                    'Количество ингридиентов не может быть меньше 1.'
                 )
             if not Ingredient.objects.filter(id=id).exists():
                 raise serializers.ValidationError(
-                    f'Ингредиента c id {id} не существует'
+                    f'Такого ингредиента нет в БД.'
                 )
             if id in ingredient_list:
                 raise serializers.ValidationError(
-                    'Ингредиенты дублируются'
+                    'Нельзя добавлять одинаковые ингридиенты.'
                 )
             ingredient_list.append(id)
         return ingredients
@@ -222,9 +222,11 @@ class FollowSerializer(serializers.ModelSerializer):
                 author=data['author']
         ):
             raise serializers.ValidationError({
-                'errors': 'Уже подписан.'
+                'errors': 'Вы уже подписаны на этого пользователя.'
             })
-        return data
+        subscription = Follow.objects.filter(
+            user=self.context['request'].user, author=data['author']
+        )
 
     def to_representation(self, value):
         return FollowListSerializer(
@@ -245,7 +247,7 @@ class CartSerializer(serializers.ModelSerializer):
             user=request.user, recipe=recipe
         ).exists():
             raise serializers.ValidationError({
-                'errors': 'Данный рецепт уже есть в корзине.'
+                'errors': 'Рецепт уже добавлен в список.'
             })
         return data
 
